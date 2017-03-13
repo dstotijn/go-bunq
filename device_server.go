@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -36,6 +37,10 @@ type DeviceServer struct {
 	Status      string
 }
 
+// ErrDeviceServerNotFound is returned when a single DeviceServer resource was
+// not found.
+var ErrDeviceServerNotFound = errors.New("device server not found")
+
 // CreateDeviceServer creates a DeviceServer resource at the bunq API.
 func (c *Client) CreateDeviceServer(description string, permittedIPs []net.IP) (*DeviceServer, error) {
 	var ips []string
@@ -53,14 +58,15 @@ func (c *Client) CreateDeviceServer(description string, permittedIPs []net.IP) (
 		return nil, fmt.Errorf("bunq: could not encode request body into JSON: %v", err)
 	}
 
+	httpMethod := http.MethodPost
 	endpoint := apiVersion + "/device-server"
-	req, err := http.NewRequest("POST", fmt.Sprintf("%v/%v", c.BaseURL, endpoint), bytes.NewReader(bodyJSON))
+	req, err := http.NewRequest(httpMethod, fmt.Sprintf("%v/%v", c.BaseURL, endpoint), bytes.NewReader(bodyJSON))
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not create new request: %v", err)
 	}
 	setCommonHeaders(req)
 	req.Header.Set("X-Bunq-Client-Authentication", c.Token)
-	if err = c.addSignature(req, "POST /"+endpoint, string(bodyJSON)); err != nil {
+	if err = c.addSignature(req, fmt.Sprintf("%v /%v", httpMethod, endpoint), string(bodyJSON)); err != nil {
 		return nil, fmt.Errorf("bunq: could not add signature: %v", err)
 	}
 
@@ -74,37 +80,125 @@ func (c *Client) CreateDeviceServer(description string, permittedIPs []net.IP) (
 		return nil, fmt.Errorf("bunq: request was unsuccessful: %v", decodeError(resp.Body))
 	}
 
-	var apiResp deviceServerResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+	var dsr deviceServerResponse
+	if err = json.NewDecoder(resp.Body).Decode(&dsr); err != nil {
 		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
 	}
 
-	if len(apiResp.Response) == 0 {
+	deviceServers, err := dsr.DeviceServers()
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
+	}
+	if len(deviceServers) == 0 {
 		return nil, errors.New("bunq: api response did not contain results")
 	}
 
-	deviceServer := &DeviceServer{}
-	for i := range apiResp.Response {
-		if apiResp.Response[i].ID != nil {
-			deviceServer.ID = apiResp.Response[i].ID.ID
-			continue
+	return deviceServers[0], nil
+}
+
+// GetDeviceServer gets a DeviceServer resource at the bunq API.
+func (c *Client) GetDeviceServer(id int) (*DeviceServer, error) {
+	httpMethod := http.MethodGet
+	endpoint := apiVersion + "/device-server/" + strconv.Itoa(id)
+	req, err := http.NewRequest(httpMethod, fmt.Sprintf("%v/%v", c.BaseURL, endpoint), nil)
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not create new request: %v", err)
+	}
+	setCommonHeaders(req)
+	req.Header.Set("X-Bunq-Client-Authentication", c.Token)
+	if err = c.addSignature(req, fmt.Sprintf("%v /%v", httpMethod, endpoint), ""); err != nil {
+		return nil, fmt.Errorf("bunq: could not add signature: %v", err)
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not send HTTP request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bunq: request was unsuccessful: %v", decodeError(resp.Body))
+	}
+
+	var dsr deviceServerResponse
+	if err = json.NewDecoder(resp.Body).Decode(&dsr); err != nil {
+		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
+	}
+
+	deviceServers, err := dsr.DeviceServers()
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
+	}
+	if len(deviceServers) == 0 {
+		return nil, ErrDeviceServerNotFound
+	}
+
+	return deviceServers[0], nil
+}
+
+// ListDeviceServers gets a list of DeviceServer resources at the bunq API.
+func (c *Client) ListDeviceServers() ([]*DeviceServer, error) {
+	httpMethod := http.MethodGet
+	endpoint := apiVersion + "/device-server"
+	req, err := http.NewRequest(httpMethod, fmt.Sprintf("%v/%v", c.BaseURL, endpoint), nil)
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not create new request: %v", err)
+	}
+	setCommonHeaders(req)
+	req.Header.Set("X-Bunq-Client-Authentication", c.Token)
+	if err = c.addSignature(req, fmt.Sprintf("%v /%v", httpMethod, endpoint), ""); err != nil {
+		return nil, fmt.Errorf("bunq: could not add signature: %v", err)
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not send HTTP request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bunq: request was unsuccessful: %v", decodeError(resp.Body))
+	}
+
+	var dsr deviceServerResponse
+	if err = json.NewDecoder(resp.Body).Decode(&dsr); err != nil {
+		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
+	}
+
+	deviceServers, err := dsr.DeviceServers()
+	if err != nil {
+		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
+	}
+
+	return deviceServers, nil
+}
+
+func (dsr *deviceServerResponse) DeviceServers() ([]*DeviceServer, error) {
+	var deviceServers []*DeviceServer
+	for i := range dsr.Response {
+		deviceServer := &DeviceServer{}
+		if dsr.Response[i].ID != nil {
+			deviceServer.ID = dsr.Response[i].ID.ID
+			deviceServers = append(deviceServers, deviceServer)
 		}
-		if apiResp.Response[i].DeviceServer != nil {
-			deviceServer.ID = apiResp.Response[i].ID.ID
-			deviceServer.Description = apiResp.Response[i].DeviceServer.Description
-			createdAt, err := parseTimestamp(apiResp.Response[i].DeviceServer.Created)
+		if dsr.Response[i].DeviceServer != nil {
+			deviceServer.ID = dsr.Response[i].DeviceServer.ID
+			deviceServer.Description = dsr.Response[i].DeviceServer.Description
+			createdAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Created)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse created timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
 			}
 			deviceServer.CreatedAt = createdAt
-			updatedAt, err := parseTimestamp(apiResp.Response[i].DeviceServer.Updated)
+			updatedAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Updated)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse updated timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
 			}
 			deviceServer.UpdatedAt = updatedAt
-			continue
+			deviceServer.Status = dsr.Response[i].DeviceServer.Status
+			deviceServer.IP = net.ParseIP(dsr.Response[i].DeviceServer.IP)
+			deviceServers = append(deviceServers, deviceServer)
 		}
 	}
 
-	return deviceServer, nil
+	return deviceServers, nil
 }
