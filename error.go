@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // Error represents an error returned by the bunq API.
@@ -16,12 +17,12 @@ type Error struct {
 type Errors []Error
 
 func (e Errors) Error() string {
-	var errs []string
-	for i := range e {
-		errs = append(errs, e[i].ErrorDescription)
+	errs := make([]string, len(e))
+	for i, err := range e {
+		errs[i] = err.ErrorDescription
 	}
 
-	return fmt.Sprintf("%v", errs)
+	return strings.Join(errs, ", ")
 }
 
 func decodeError(r io.Reader) error {
@@ -33,7 +34,7 @@ func decodeError(r io.Reader) error {
 	}
 	err := json.NewDecoder(r).Decode(&apiError)
 	if err != nil {
-		return fmt.Errorf("bunq: could not decode errors from json: %v", err)
+		return fmt.Errorf("could not decode errors from json: %v", err)
 	}
 
 	var errors Errors
