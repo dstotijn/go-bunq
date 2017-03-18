@@ -85,7 +85,7 @@ func (c *Client) CreateDeviceServer(description string, permittedIPs []net.IP) (
 		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
 	}
 
-	deviceServers, err := dsr.DeviceServers()
+	deviceServers, err := dsr.deviceServers()
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -125,7 +125,7 @@ func (c *Client) GetDeviceServer(id int) (*DeviceServer, error) {
 		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
 	}
 
-	deviceServers, err := dsr.DeviceServers()
+	deviceServers, err := dsr.deviceServers()
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -165,7 +165,7 @@ func (c *Client) ListDeviceServers() ([]*DeviceServer, error) {
 		return nil, fmt.Errorf("bunq: could not decode HTTP response: %v", err)
 	}
 
-	deviceServers, err := dsr.DeviceServers()
+	deviceServers, err := dsr.deviceServers()
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -173,7 +173,7 @@ func (c *Client) ListDeviceServers() ([]*DeviceServer, error) {
 	return deviceServers, nil
 }
 
-func (dsr *deviceServerResponse) DeviceServers() ([]*DeviceServer, error) {
+func (dsr *deviceServerResponse) deviceServers() ([]*DeviceServer, error) {
 	var deviceServers []*DeviceServer
 	for i := range dsr.Response {
 		deviceServer := &DeviceServer{}
@@ -186,12 +186,12 @@ func (dsr *deviceServerResponse) DeviceServers() ([]*DeviceServer, error) {
 			deviceServer.Description = dsr.Response[i].DeviceServer.Description
 			createdAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Created)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse created timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
 			}
 			deviceServer.CreatedAt = createdAt
 			updatedAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Updated)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse updated timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
 			}
 			deviceServer.UpdatedAt = updatedAt
 			deviceServer.Status = dsr.Response[i].DeviceServer.Status
