@@ -87,7 +87,7 @@ func (c *Client) CreateInstallation() (*Installation, error) {
 		return nil, errors.New("bunq: api response did not contain results")
 	}
 
-	installation, err := insResp.Installation()
+	installation, err := insResp.installation()
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -128,7 +128,7 @@ func (c *Client) GetInstallation(id int) (*Installation, error) {
 		return nil, ErrInstallationNotFound
 	}
 
-	installation, err := insResp.Installation()
+	installation, err := insResp.installation()
 	if err != nil {
 		return nil, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -170,7 +170,7 @@ func (c *Client) GetInstallationID() (int, error) {
 		return 0, ErrInstallationNotFound
 	}
 
-	installation, err := insResp.Installation()
+	installation, err := insResp.installation()
 	if err != nil {
 		return 0, fmt.Errorf("bunq: could not parse API response: %v", err)
 	}
@@ -178,7 +178,7 @@ func (c *Client) GetInstallationID() (int, error) {
 	return installation.ID, nil
 }
 
-func (insResp *installationResponse) Installation() (*Installation, error) {
+func (insResp *installationResponse) installation() (*Installation, error) {
 	installation := &Installation{}
 	for i := range insResp.Response {
 		if insResp.Response[i].ID != nil {
@@ -190,12 +190,12 @@ func (insResp *installationResponse) Installation() (*Installation, error) {
 			installation.Token.Token = insResp.Response[i].Token.Token
 			createdAt, err := parseTimestamp(insResp.Response[i].Token.Created)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse created timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
 			}
 			installation.Token.CreatedAt = createdAt
 			updatedAt, err := parseTimestamp(insResp.Response[i].Token.Updated)
 			if err != nil {
-				return nil, fmt.Errorf("bunq: could not parse updated timestamp: %v", err)
+				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
 			}
 			installation.Token.UpdatedAt = updatedAt
 			continue
