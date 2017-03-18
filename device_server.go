@@ -186,12 +186,12 @@ func (dsr *deviceServerResponse) DeviceServers() ([]*DeviceServer, error) {
 			deviceServer.Description = dsr.Response[i].DeviceServer.Description
 			createdAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Created)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
+				return nil, fmt.Errorf("bunq: could not parse created timestamp: %v", err)
 			}
 			deviceServer.CreatedAt = createdAt
 			updatedAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Updated)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
+				return nil, fmt.Errorf("bunq: could not parse updated timestamp: %v", err)
 			}
 			deviceServer.UpdatedAt = updatedAt
 			deviceServer.Status = dsr.Response[i].DeviceServer.Status

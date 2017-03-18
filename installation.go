@@ -190,12 +190,12 @@ func (insResp *installationResponse) Installation() (*Installation, error) {
 			installation.Token.Token = insResp.Response[i].Token.Token
 			createdAt, err := parseTimestamp(insResp.Response[i].Token.Created)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
+				return nil, fmt.Errorf("bunq: could not parse created timestamp: %v", err)
 			}
 			installation.Token.CreatedAt = createdAt
 			updatedAt, err := parseTimestamp(insResp.Response[i].Token.Updated)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
+				return nil, fmt.Errorf("bunq: could not parse updated timestamp: %v", err)
 			}
 			installation.Token.UpdatedAt = updatedAt
 			continue
