@@ -18,8 +18,8 @@ type deviceServerResponse struct {
 		} `json:"Id,omitempty"`
 		DeviceServer *struct {
 			ID          int    `json:"id"`
-			Created     string `json:"created"`
-			Updated     string `json:"updated"`
+			Created     Time   `json:"created"`
+			Updated     Time   `json:"updated"`
 			Description string `json:"description"`
 			IP          string `json:"ip"`
 			Status      string `json:"status"`
@@ -184,16 +184,8 @@ func (dsr *deviceServerResponse) deviceServers() ([]*DeviceServer, error) {
 		if dsr.Response[i].DeviceServer != nil {
 			deviceServer.ID = dsr.Response[i].DeviceServer.ID
 			deviceServer.Description = dsr.Response[i].DeviceServer.Description
-			createdAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Created)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
-			}
-			deviceServer.CreatedAt = createdAt
-			updatedAt, err := parseTimestamp(dsr.Response[i].DeviceServer.Updated)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
-			}
-			deviceServer.UpdatedAt = updatedAt
+			deviceServer.CreatedAt = time.Time(dsr.Response[i].DeviceServer.Created)
+			deviceServer.UpdatedAt = time.Time(dsr.Response[i].DeviceServer.Updated)
 			deviceServer.Status = dsr.Response[i].DeviceServer.Status
 			deviceServer.IP = net.ParseIP(dsr.Response[i].DeviceServer.IP)
 			deviceServers = append(deviceServers, deviceServer)

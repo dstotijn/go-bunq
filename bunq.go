@@ -3,17 +3,15 @@ package bunq
 import (
 	"crypto/rsa"
 	"net/http"
-	"time"
 
 	"github.com/satori/go.uuid"
 )
 
 const (
-	baseURL         = "https://api.bunq.com"
-	apiVersion      = "v1"
-	clientVersion   = "1.0.0"
-	userAgent       = "go-bunq/" + clientVersion
-	timestampLayout = "2006-01-02 15:04:05.000000"
+	baseURL       = "https://api.bunq.com"
+	apiVersion    = "v1"
+	clientVersion = "1.0.0"
+	userAgent     = "go-bunq/" + clientVersion
 )
 
 // Client is the API client for the public bunq API.
@@ -40,8 +38,4 @@ func setCommonHeaders(r *http.Request) {
 	r.Header.Set("X-Bunq-Geolocation", "0 0 0 0 NL")
 	r.Header.Set("X-Bunq-Language", "en_US")
 	r.Header.Set("X-Bunq-Region", "en_US")
-}
-
-func parseTimestamp(value string) (time.Time, error) {
-	return time.Parse(timestampLayout, value)
 }

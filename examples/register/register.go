@@ -47,4 +47,12 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("Retrieved DeviceServer: %#v\n", deviceServer)
+
+	fmt.Printf("\n* Creating Session...\n\n")
+	session, err := client.CreateSession()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Created Session: %#v\n", session)
 }

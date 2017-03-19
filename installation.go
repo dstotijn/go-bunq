@@ -17,8 +17,8 @@ type installationResponse struct {
 		} `json:"Id,omitempty"`
 		Token *struct {
 			ID      int    `json:"id"`
-			Created string `json:"created"`
-			Updated string `json:"updated"`
+			Created Time   `json:"created"`
+			Updated Time   `json:"updated"`
 			Token   string `json:"token"`
 		} `json:"Token,omitempty"`
 		ServerPublicKey *struct {
@@ -27,8 +27,8 @@ type installationResponse struct {
 	} `json:"Response"`
 }
 
-// A Token is used for authenticating requests to the bunq API.
-type Token struct {
+// An InstallationToken is used for authenticating requests to the bunq API.
+type InstallationToken struct {
 	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -38,7 +38,7 @@ type Token struct {
 // An Installation represents an installation resource at the bunq API.
 type Installation struct {
 	ID              int
-	Token           Token
+	Token           InstallationToken
 	ServerPublicKey string
 }
 
@@ -188,16 +188,8 @@ func (insResp *installationResponse) installation() (*Installation, error) {
 		if insResp.Response[i].Token != nil {
 			installation.Token.ID = insResp.Response[i].Token.ID
 			installation.Token.Token = insResp.Response[i].Token.Token
-			createdAt, err := parseTimestamp(insResp.Response[i].Token.Created)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse created timestamp: %v", err)
-			}
-			installation.Token.CreatedAt = createdAt
-			updatedAt, err := parseTimestamp(insResp.Response[i].Token.Updated)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse updated timestamp: %v", err)
-			}
-			installation.Token.UpdatedAt = updatedAt
+			installation.Token.CreatedAt = time.Time(insResp.Response[i].Token.Created)
+			installation.Token.UpdatedAt = time.Time(insResp.Response[i].Token.Updated)
 			continue
 		}
 		if insResp.Response[i].ServerPublicKey != nil {

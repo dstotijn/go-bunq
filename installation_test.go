@@ -58,7 +58,7 @@ GZ4h0C1AqVJNAxfUH5p7vKxp4E73SYVry88zdHkFj6nYfgXkasBBVA==
 
 	exp := &Installation{
 		ID: 4971,
-		Token: Token{
+		Token: InstallationToken{
 			ID:        11352,
 			Token:     "2237d5026c1d70121ac6fef73bbe937c1a8bc7340ef0acd253d6d9f85a6dbfda",
 			CreatedAt: time.Unix(1489236003, 613887000).UTC(),
