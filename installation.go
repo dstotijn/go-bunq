@@ -54,7 +54,7 @@ func (c *Client) CreateInstallation() (*Installation, error) {
 	}
 
 	body := struct {
-		string `json:"client_public_key"`
+		Field string `json:"client_public_key"`
 	}{string(publicKey)}
 	bodyJSON, err := json.Marshal(body)
 	if err != nil {
