@@ -34,7 +34,7 @@ func NewClient() *Client {
 func setCommonHeaders(r *http.Request) {
 	r.Header.Set("Cache-Control", "no-cache")
 	r.Header.Set("User-Agent", userAgent)
-	r.Header.Set("X-Bunq-Client-Request-Id", uuid.NewV4().String())
+	r.Header.Set("X-Bunq-Client-Request-Id", uuid.Must(uuid.NewV4()).String())
 	r.Header.Set("X-Bunq-Geolocation", "0 0 0 0 NL")
 	r.Header.Set("X-Bunq-Language", "en_US")
 	r.Header.Set("X-Bunq-Region", "en_US")
